@@ -1,11 +1,15 @@
 package com.fengxiaoshuai.ui;
 
+
+import com.fengxiaoshuai.domain.GameInfo;
+
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.*;
 import java.util.Random;
 
 public class GameJFrame extends JFrame implements KeyListener, ActionListener {
@@ -40,15 +44,29 @@ public class GameJFrame extends JFrame implements KeyListener, ActionListener {
     JMenuItem animalItem = new JMenuItem("动物");
     JMenuItem sportItem = new JMenuItem("运动");
 
+    JMenu readJmenu = new JMenu("读档");
+    JMenu saveJmenu = new JMenu("存档");
+    JMenuItem saveFileItem0 = new JMenuItem("存档0(空)");
+    JMenuItem saveFileItem1 = new JMenuItem("存档1(空)");
+    JMenuItem saveFileItem2 = new JMenuItem("存档2(空)");
+    JMenuItem saveFileItem3 = new JMenuItem("存档3(空)");
+    JMenuItem saveFileItem4 = new JMenuItem("存档4(空)");
+
+    JMenuItem readFileItem0 = new JMenuItem("读档0(空)");
+    JMenuItem readFileItem1 = new JMenuItem("读档1(空)");
+    JMenuItem readFileItem2 = new JMenuItem("读档2(空)");
+    JMenuItem readFileItem3 = new JMenuItem("读档3(空)");
+    JMenuItem readFileItem4 = new JMenuItem("读档4(空)");
 
 
-
-    public GameJFrame(){
+    public GameJFrame() {
         // 初始化界面
         initJFrame();
 
         // 初始化菜单
+
         initJMenuBar();
+
 
         // 初始化数据(将图片顺序打乱)
         randomImage();
@@ -154,10 +172,24 @@ public class GameJFrame extends JFrame implements KeyListener, ActionListener {
         changeJmenu.add(animalItem);
         changeJmenu.add(sportItem);
 
+        saveJmenu.add(saveFileItem0);
+        saveJmenu.add(saveFileItem1);
+        saveJmenu.add(saveFileItem2);
+        saveJmenu.add(saveFileItem3);
+        saveJmenu.add(saveFileItem4);
+
+
+        readJmenu.add(readFileItem0);
+        readJmenu.add(readFileItem1);
+        readJmenu.add(readFileItem2);
+        readJmenu.add(readFileItem3);
+        readJmenu.add(readFileItem4);
 
 
         // 将每一个选项下面的条目添加到选项当中
         functionJmenu.add(changeJmenu);
+        functionJmenu.add(saveJmenu);
+        functionJmenu.add(readJmenu);
 
 
         functionJmenu.add(replayItem);
@@ -175,6 +207,17 @@ public class GameJFrame extends JFrame implements KeyListener, ActionListener {
         animalItem.addActionListener(this);
         sportItem.addActionListener(this);
 
+        saveFileItem0.addActionListener(this);
+        saveFileItem1.addActionListener(this);
+        saveFileItem2.addActionListener(this);
+        saveFileItem3.addActionListener(this);
+        saveFileItem4.addActionListener(this);
+
+        readFileItem0.addActionListener(this);
+        readFileItem1.addActionListener(this);
+        readFileItem2.addActionListener(this);
+        readFileItem3.addActionListener(this);
+        readFileItem4.addActionListener(this);
 
         replayItem.addActionListener(this);
         reLoginItem.addActionListener(this);
@@ -185,8 +228,43 @@ public class GameJFrame extends JFrame implements KeyListener, ActionListener {
         jMenuBar.add(functionJmenu);
         jMenuBar.add(aboutJmenu);
 
+        // 读取存档信息
+         getGameInfo();
         // 给整个界面菜单
         this.setJMenuBar(jMenuBar);
+    }
+
+    public void getGameInfo() {
+        // 创建File对象表示所有存档所在的文件夹
+        File file = new File("save");
+        // 进入文件夹获取到里面所有的存档文件
+        File[] files = file.listFiles();
+        // 获取里面的步数,修改菜单
+        for (File f : files) {
+
+            GameInfo o = null;
+            try {
+                ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f));
+                o = (GameInfo) ois.readObject();
+                ois.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+//
+            // 获取到步数
+            int step = o.getStep();
+            // 把步数同步到菜单当中
+            String name = f.getName();
+            // 获取存档索引
+            int index = name.charAt(4) - '0';
+            // 修改菜单上的文字
+            saveJmenu.getItem(index).setText("存档"+index+"("+step+"步)");
+            readJmenu.getItem(index).setText("读档"+index+"("+step+"步)");
+
+        }
+
     }
 
     private void initJFrame() {
@@ -378,6 +456,45 @@ public class GameJFrame extends JFrame implements KeyListener, ActionListener {
             // 计步器清零
             step = 0;
             // 重新加载图片
+            initImage();
+        }else if(obj == saveFileItem0 || obj == saveFileItem1 || obj == saveFileItem2 || obj == saveFileItem3 || obj == saveFileItem4){
+            System.out.println("存档");
+            // 直接把游戏数据写到本地文件中
+            JMenuItem item = (JMenuItem) obj;
+            String str = item.getText();
+            int index = str.charAt(2) - '0';
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("save\\save"+index+".data"));
+                GameInfo gi = new GameInfo(arr,x,y,path,step);
+                oos.writeObject(gi);
+                oos.close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            // 修改一下存档item上的展示信息
+            // 存档1(XX步)
+            item.setText("存档"+index+"("+step+"步)");
+            // 修改下读档的信息
+            readJmenu.getItem(index).setText("读档"+index+"("+step+"步)");
+
+        }else if(obj == readFileItem0 || obj == readFileItem1 || obj == readFileItem2 || obj == readFileItem3 || obj == readFileItem4){
+            System.out.println("读档案");
+            JMenuItem item = (JMenuItem) obj;
+            String str = item.getText();
+            int index = str.charAt(2) - '0';
+            GameInfo o = null;
+            try {
+                ObjectInputStream ois = new ObjectInputStream(new FileInputStream("save\\save"+index+".data"));
+                o = (GameInfo) ois.readObject();
+                ois.close();
+            } catch (IOException | ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
+            arr = o.getArr();
+            path = o.getPath();
+            x = o.getX();
+            y = o.getY();
+            step = o.getStep();
             initImage();
         }
     }

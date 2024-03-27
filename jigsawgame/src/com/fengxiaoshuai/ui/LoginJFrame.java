@@ -1,5 +1,6 @@
 package com.fengxiaoshuai.ui;
 
+import cn.hutool.core.io.FileUtil;
 import com.fengxiaoshuai.domain.User;
 import com.fengxiaoshuai.util.CodeUtil;
 
@@ -10,14 +11,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.List;
 
 public class LoginJFrame extends JFrame implements MouseListener {
 
-    static ArrayList<User> allUsers = new ArrayList<>();
-    static {
-        allUsers.add(new User("丰小帅","123"));
-        allUsers.add(new User("丰大帅","321"));
-    }
+    ArrayList<User> allUsers = new ArrayList<>();
 
 
     JButton login = new JButton();
@@ -33,6 +31,8 @@ public class LoginJFrame extends JFrame implements MouseListener {
 
 
     public LoginJFrame() {
+        // 读取本地文件中的用于信息
+        readUserInfo();
         //初始化界面
         initJFrame();
 
@@ -42,6 +42,20 @@ public class LoginJFrame extends JFrame implements MouseListener {
 
         //让当前界面显示出来
         this.setVisible(true);
+    }
+
+    private void readUserInfo() {
+        // 读取数据
+        List<String> userInfoStrList = FileUtil.readUtf8Lines("C:\\Users\\丰浩翔\\Desktop\\Java\\jigsawgame\\usersinfo\\user.txt");
+        // 遍历集合获取用户信息并创建User对象
+        for (String s : userInfoStrList) {
+            String[] arrTemp = s.split("&");
+            String[] userName = arrTemp[0].split("=");
+            String[] password = arrTemp[1].split("=");
+            allUsers.add(new User(userName[1],password[1]));
+        }
+        System.out.println(allUsers);
+
     }
 
     public void initView() {
@@ -149,7 +163,8 @@ public class LoginJFrame extends JFrame implements MouseListener {
                 //校验用户名和密码是否为空
                 System.out.println("用户名或者密码为空");
 
-                //调用showJDialog方法并展示弹框
+                //调用showJDialog方法并展示
+                //                //打开游戏的主界面弹框
                 showJDialog("用户名或者密码为空");
 
 
@@ -159,7 +174,6 @@ public class LoginJFrame extends JFrame implements MouseListener {
                 System.out.println("用户名和密码正确可以开始玩游戏了");
                 //关闭当前登录界面
                 this.setVisible(false);
-                //打开游戏的主界面
                 //需要把当前登录的用户名传递给游戏界面
                 new GameJFrame();
             } else {
@@ -168,6 +182,10 @@ public class LoginJFrame extends JFrame implements MouseListener {
             }
         } else if (e.getSource() == register) {
             System.out.println("点击了注册按钮");
+            // 关闭当前的登录页面
+            this.setVisible(false);
+            // 打开注册界面
+            new RegisterJFrame(allUsers);
         } else if (e.getSource() == rightCode) {
             System.out.println("更换验证码");
             //获取一个新的验证码
@@ -175,7 +193,6 @@ public class LoginJFrame extends JFrame implements MouseListener {
             rightCode.setText(code);
         }
     }
-
 
     public void showJDialog(String content) {
         //创建一个弹框对象

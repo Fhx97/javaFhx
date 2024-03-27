@@ -1,0 +1,14 @@
+{
+  "MENU": [
+    {
+      "label": "重新登录",
+      "cls": "com.fengxiaoshuai.action.ReLogin",
+      "childs":[
+
+      ]
+    }
+  ],
+  "ABOUT": [
+
+  ]
+}
